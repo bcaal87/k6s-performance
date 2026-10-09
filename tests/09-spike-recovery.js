@@ -1,0 +1,4 @@
+import http from 'k6/http'; import {Trend} from 'k6/metrics';
+const BASE_URL=__ENV.BASE_URL; const normal=new Trend('latency_normal',true), spike=new Trend('latency_spike',true), recovery=new Trend('latency_recovery',true);
+export const options={scenarios:{spike:{executor:'ramping-vus',startVUs:5,stages:[{duration:'15s',target:5},{duration:'5s',target:120},{duration:'20s',target:120},{duration:'5s',target:5},{duration:'20s',target:5},{duration:'5s',target:0}]}}};
+export default function(){const l=http.post(`${BASE_URL}/api/auth/login`,JSON.stringify({user:'student',password:'qa123'}),{headers:{'Content-Type':'application/json'}});const t=l.json('token');const r=http.get(`${BASE_URL}/api/search?q=Producto`,{headers:{Authorization:`Bearer ${t}`}}); const elapsed=__ENV.K6_STAGE_CURRENT||''; if(__VU<=5) normal.add(r.timings.duration); else spike.add(r.timings.duration);}

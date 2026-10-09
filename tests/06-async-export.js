@@ -1,0 +1,4 @@
+import http from 'k6/http'; import {check,sleep} from 'k6'; import {Trend} from 'k6/metrics';
+const BASE_URL=__ENV.BASE_URL; const exportE2E=new Trend('export_e2e',true);
+export const options={vus:4,iterations:12,thresholds:{export_e2e:['p(95)<3000']}};
+export default function(){const l=http.post(`${BASE_URL}/api/auth/login`,JSON.stringify({user:'student',password:'qa123'}),{headers:{'Content-Type':'application/json'}}); const t=l.json('token'); const h={Authorization:`Bearer ${t}`}; const start=Date.now(); const c=http.post(`${BASE_URL}/api/exports`,'',{headers:h}); const id=c.json('jobId'); let done=false; for(let i=0;i<12;i++){sleep(.2); const r=http.get(`${BASE_URL}/api/exports/${id}`,{headers:h}); if(r.status===200){done=true;break;}} exportE2E.add(Date.now()-start); check({done},{'export completed':x=>x.done});}

@@ -1,0 +1,4 @@
+import http from 'k6/http'; import {check} from 'k6'; import {Counter} from 'k6/metrics';
+const BASE_URL=__ENV.BASE_URL; const duplicates=new Counter('duplicates');
+export const options={vus:1,iterations:1};
+export default function(){const l=http.post(`${BASE_URL}/api/auth/login`,JSON.stringify({user:'student',password:'qa123'}),{headers:{'Content-Type':'application/json'}});const t=l.json('token'); const k=`idem-${Date.now()}`; const opt={headers:{'Content-Type':'application/json',Authorization:`Bearer ${t}`,'Idempotency-Key':k}}; const body=JSON.stringify({productId:3,quantity:1}); const a=http.post(`${BASE_URL}/api/orders`,body,opt); const b=http.post(`${BASE_URL}/api/orders`,body,opt); if(b.json('duplicate')) duplicates.add(1); check(b,{'same order':r=>r.json('orderId')===a.json('orderId'),'duplicate true':r=>r.json('duplicate')===true});}

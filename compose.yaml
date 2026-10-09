@@ -1,0 +1,16 @@
+services:
+  performance-app:
+    build: .
+    container_name: performance-app
+    ports:
+      - "3000:3000"
+  k6:
+    image: grafana/k6
+    profiles: ["tools"]
+    depends_on:
+      - performance-app
+    environment:
+      BASE_URL: http://performance-app:3000
+    volumes:
+      - ./tests:/scripts
+      - ./results:/results
