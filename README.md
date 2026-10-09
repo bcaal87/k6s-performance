@@ -39,6 +39,3 @@ Consulte métricas internas:
 http://localhost:3000/api/admin/stats
 ```
 
-Los archivos contienen TODOs. No están resueltos.
-
-Esta carpeta contiene soluciones de referencia para el docente.
