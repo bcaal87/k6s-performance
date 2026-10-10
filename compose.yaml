@@ -1,16 +1,48 @@
 services:
+
   performance-app:
     build: .
     container_name: performance-app
     ports:
       - "3000:3000"
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-remote-write-receiver"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+
   k6:
     image: grafana/k6
     profiles: ["tools"]
     depends_on:
       - performance-app
+      - prometheus
     environment:
       BASE_URL: http://performance-app:3000
+      K6_PROMETHEUS_RW_SERVER_URL: http://prometheus:9090/api/v1/write
+      K6_PROMETHEUS_RW_TREND_STATS: p(90),p(95),p(99),min,max
     volumes:
       - ./tests:/scripts
       - ./results:/results
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  
